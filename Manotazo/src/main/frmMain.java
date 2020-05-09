@@ -5,6 +5,7 @@
  */
 package main;
 
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JLabel;
@@ -17,6 +18,7 @@ public class frmMain extends javax.swing.JFrame {
     
     private final Productor generador = new Productor();
     private int numero = 0;
+    private final Semaphore mutex = new Semaphore(1, true);
 
     /**
      * Creates new form frmMain
@@ -60,7 +62,7 @@ public class frmMain extends javax.swing.JFrame {
         
         @Override
         public void run(){
-            while(true){
+            while(limite<15){
                 while(numero==0)
                     System.out.println("Esperando...");
                 try {
@@ -68,11 +70,18 @@ public class frmMain extends javax.swing.JFrame {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(frmMain.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                try {
+                    mutex.acquire();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(frmMain.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 numeroAtrapado = numero;
                 numero = 0;
+                mutex.release();
                 lblNumero.setText("null");
                 aumentar();
             }
+            estado.setText("Durmiendo...");
         }
         
         private void aumentar(){
